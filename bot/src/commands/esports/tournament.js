@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const Tournament = require('../../models/Tournament');
 
 module.exports = {
@@ -36,6 +36,8 @@ module.exports = {
     ],
 
     async run(client, interaction) {
+        if (!interaction.guild) return interaction.reply({ content: '❌ This command can only be used in a server.', ephemeral: true });
+
         const sub = interaction.options.getSubcommand();
 
         const checkAdmin = require('../../utils/checkAdmin');
