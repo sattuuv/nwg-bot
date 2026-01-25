@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const buttonHandler = require('../utils/buttonHandler');
+const modalHandler = require('../utils/modalHandler');
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -7,6 +8,10 @@ module.exports = {
     async execute(interaction, client) {
         if (interaction.isButton()) {
             return buttonHandler(client, interaction);
+        }
+
+        if (interaction.isModalSubmit()) {
+            return modalHandler(client, interaction);
         }
 
         if (!interaction.isChatInputCommand()) return;
