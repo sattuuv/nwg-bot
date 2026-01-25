@@ -33,7 +33,7 @@ class BotClient extends Client {
 
     async registerModules() {
         // Load Commands
-        const commandFiles = await globPromise(`${process.cwd()}/bot/src/commands/**/*.js`);
+        const commandFiles = await globPromise(`${process.cwd().replace(/\\/g, '/')}/src/commands/**/*.js`);
         commandFiles.forEach((file) => {
             const command = require(file);
             if (!command.name) return;
@@ -42,7 +42,7 @@ class BotClient extends Client {
         });
 
         // Load Events
-        const eventFiles = await globPromise(`${process.cwd()}/bot/src/events/*.js`);
+        const eventFiles = await globPromise(`${process.cwd().replace(/\\/g, '/')}/src/events/*.js`);
         eventFiles.forEach((file) => {
             const event = require(file);
             console.log(chalk.blue(`[EVENT] Loaded: ${event.name}`));
