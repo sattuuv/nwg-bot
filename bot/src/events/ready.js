@@ -7,9 +7,17 @@ module.exports = {
     async execute(client) {
         console.log(chalk.green(`[READY] Logged in as ${client.user.tag}`));
 
+        // Dynamic Status
+        const BotConfig = require('../models/BotConfig');
+        const config = await BotConfig.findOne({ instanceId: 'global' });
+
+        const activityName = config ? config.activityName : 'NWG Tournaments';
+        const activityType = config ? config.activityType : ActivityType.Competing;
+        const status = config ? config.status : 'online';
+
         client.user.setPresence({
-            activities: [{ name: 'NWG Tournaments', type: ActivityType.Competing }],
-            status: 'online',
+            activities: [{ name: activityName, type: activityType }],
+            status: status,
         });
 
         // Register Slash Commands
