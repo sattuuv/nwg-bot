@@ -1,9 +1,14 @@
 const { Events } = require('discord.js');
+const buttonHandler = require('../utils/buttonHandler');
 
 module.exports = {
     name: Events.InteractionCreate,
     once: false,
     async execute(interaction, client) {
+        if (interaction.isButton()) {
+            return buttonHandler(client, interaction);
+        }
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = client.commands.get(interaction.commandName);

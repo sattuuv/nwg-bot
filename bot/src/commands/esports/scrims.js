@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const Post = require('../../models/Post');
 
 module.exports = {
     name: 'scrims',
@@ -46,7 +47,18 @@ module.exports = {
             // In reality, you'd post this to a specific #scrims channel.
             // For now, reply here.
             await interaction.reply({ content: 'Scrim Ad Posted!', ephemeral: true });
-            return interaction.channel.send({ embeds: [embed], components: [row] });
+            const msg = await interaction.channel.send({ embeds: [embed], components: [row] });
+
+            try {
+                await Post.create({
+                    messageId: msg.id,
+                    channelId: interaction.channel.id,
+                    type: 'SCRIM',
+                    creatorId: interaction.user.id,
+                    maxClaims: slots
+                });
+            } catch (err) { console.error(err); }
+            return;
         }
 
         if (sub === 'results') {
