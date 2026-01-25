@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const TournamentSchema = new mongoose.Schema({
+    guildId: { type: String, required: true },
     name: { type: String, required: true },
     game: { type: String, required: true }, // e.g., "PUBG Mobile", "Valorant"
     mode: { type: String, enum: ['Solo', 'Duo', 'Squad'], default: 'Squad' },

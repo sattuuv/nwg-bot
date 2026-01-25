@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const TeamSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
+    guildId: { type: String, required: true, index: true },
+    name: { type: String, required: true },
     cleanName: { type: String, lowercase: true, index: true }, // for search
     captainId: { type: String, required: true },
     logo: { type: String, default: null },
