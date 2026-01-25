@@ -8,10 +8,15 @@ module.exports = async (client, interaction) => {
     if (interaction.customId.startsWith('submit_join_')) {
         const tournamentId = interaction.customId.split('_')[2];
         const teamName = interaction.fields.getTextInputValue('teamName');
-        const teamMembersInput = interaction.fields.getTextInputValue('teamMembers');
 
-        // Parse User IDs from mentions or raw input
-        const memberIds = teamMembersInput.match(/\d{17,20}/g) || [interaction.user.id];
+        // Dynamic Member Parsing
+        let memberString = "";
+        try { memberString += interaction.fields.getTextInputValue('mate1') + " "; } catch (e) { }
+        try { memberString += interaction.fields.getTextInputValue('squad_members') + " "; } catch (e) { }
+
+        // Always include self (Captain)
+        const memberIds = memberString.match(/\d{17,20}/g) || [];
+        if (!memberIds.includes(interaction.user.id)) memberIds.unshift(interaction.user.id);
 
         const tournament = await Tournament.findById(tournamentId);
         if (!tournament) return interaction.reply({ content: '❌ Tournament not found.', ephemeral: true });
@@ -34,8 +39,29 @@ module.exports = async (client, interaction) => {
         tournament.participants.push(newTeam._id);
         await tournament.save();
 
+        // Update Original Embed (Live Slots)
+        if (tournament.channelId && tournament.messageId) {
+            try {
+                const channel = await client.channels.fetch(tournament.channelId);
+                const msg = await channel.messages.fetch(tournament.messageId);
+                if (msg) {
+                    const embed = EmbedBuilder.from(msg.embeds[0]);
+                    const currentFilled = tournament.participants.length;
+                    const max = tournament.maxTeams;
+
+                    // Regex replace the Slots Description
+                    const desc = embed.data.description.replace(/Slots: \d+\/\d+/, `Slots: ${currentFilled}/${max}`);
+                    embed.setDescription(desc);
+
+                    await msg.edit({ embeds: [embed] });
+                }
+            } catch (err) {
+                console.error("Could not update live tournament embed:", err);
+            }
+        }
+
         // Notify User
-        await interaction.reply({ content: `✅ **${teamName}** registered successfully for **${tournament.name}**!`, ephemeral: true });
+        await interaction.reply({ content: `✅ **${teamName}** registered for **${tournament.name}**! (${tournament.participants.length}/${tournament.maxTeams} Slots)`, ephemeral: true });
 
         // Check if full AFTER registration
         if (tournament.participants.length >= tournament.maxTeams) {

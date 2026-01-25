@@ -11,6 +11,7 @@ const TournamentSchema = new mongoose.Schema({
     entryFee: { type: Number, default: 0 },
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
     channelId: { type: String }, // Discord channel for updates
+    messageId: { type: String }, // To update the embed (Slots)
     createdBy: { type: String }, // Admin ID
     createdAt: { type: Date, default: Date.now },
     startTime: { type: Date }

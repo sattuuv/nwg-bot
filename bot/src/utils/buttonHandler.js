@@ -10,7 +10,7 @@ module.exports = async (client, interaction) => {
     if (customId.startsWith('join_tournament_')) {
         const tournamentId = customId.split('_')[2];
 
-        // Fetch tournament to make sure it exists/isn't full
+        // Fetch tournament
         const tournament = await Tournament.findById(tournamentId);
         if (!tournament) return interaction.reply({ content: '❌ Tournament not found or ended.', ephemeral: true });
 
@@ -18,10 +18,12 @@ module.exports = async (client, interaction) => {
             return interaction.reply({ content: '❌ Tournament is full!', ephemeral: true });
         }
 
-        // Show Modal
+        const mode = tournament.mode; // Solo, Duo, Squad
+
+        // Helper to create inputs
         const modal = new ModalBuilder()
             .setCustomId(`submit_join_${tournamentId}`)
-            .setTitle('Register for Tournament');
+            .setTitle(`Reg: ${tournament.name} (${mode})`);
 
         const teamNameInput = new TextInputBuilder()
             .setCustomId('teamName')
@@ -29,17 +31,25 @@ module.exports = async (client, interaction) => {
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
-        const membersInput = new TextInputBuilder()
-            .setCustomId('teamMembers')
-            .setLabel("Team Members (Tag or Name)")
-            .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder("Player1, Player2, Player3...")
-            .setRequired(true);
+        const rows = [new ActionRowBuilder().addComponents(teamNameInput)];
 
-        const firstActionRow = new ActionRowBuilder().addComponents(teamNameInput);
-        const secondActionRow = new ActionRowBuilder().addComponents(membersInput);
+        // Dynamic Inputs based on Mode
+        if (mode === 'Duo') {
+            const mate1 = new TextInputBuilder().setCustomId('mate1').setLabel("Teammate 1 (Tag/ID)").setStyle(TextInputStyle.Short).setRequired(true);
+            rows.push(new ActionRowBuilder().addComponents(mate1));
+        }
+        else if (mode === 'Squad') {
+            const members = new TextInputBuilder()
+                .setCustomId('squad_members')
+                .setLabel("Teammates (Tag 3-4 players)")
+                .setStyle(TextInputStyle.Paragraph)
+                .setPlaceholder("Player2, Player3, Player4...")
+                .setRequired(true);
+            rows.push(new ActionRowBuilder().addComponents(members));
+        }
+        // Solo: No extra inputs needed (User is the player)
 
-        modal.addComponents(firstActionRow, secondActionRow);
+        modal.addComponents(...rows);
 
         await interaction.showModal(modal);
         return;
