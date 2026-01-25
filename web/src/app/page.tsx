@@ -12,9 +12,9 @@ export default function Home() {
               <span className="text-xl font-bold text-white">NWG<span className="text-[#F81C4F]">Bot</span></span>
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-              <Link href="#" className="hover:text-[#F81C4F] transition-colors">Features</Link>
-              <Link href="#" className="hover:text-[#F81C4F] transition-colors">Commands</Link>
-              <Link href="#" className="hover:text-[#F81C4F] transition-colors">Support</Link>
+              <Link href="/features" className="hover:text-[#F81C4F] transition-colors">Features</Link>
+              <Link href="/commands" className="hover:text-[#F81C4F] transition-colors">Commands</Link>
+              <Link href="/support" className="hover:text-[#F81C4F] transition-colors">Support</Link>
             </div>
             <div className="flex items-center gap-3">
               <Link href="/dashboard" className="hidden md:inline-flex items-center bg-white text-[#0f0f2d] font-semibold py-2 px-5 rounded-lg shadow-lg hover:-translate-y-0.5 transition-all text-sm">
