@@ -75,11 +75,21 @@ module.exports = {
                 **Entry Fee:** ${fee > 0 ? fee : 'Free'}
                 **Slots:** ${slots} Teams
                 
-                Click the button below or use \`/tournament join\`!
+                Click the button below to register your team!
                 `)
-                .setColor('Gold');
+                .setColor('Gold')
+                .setFooter({ text: `Tournament ID: ${newTourney._id}` });
 
-            return interaction.reply({ embeds: [embed] });
+            const row = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`join_tournament_${newTourney._id}`)
+                        .setLabel('Join Tournament')
+                        .setStyle(ButtonStyle.Success)
+                        .setEmoji('📝')
+                );
+
+            return interaction.reply({ embeds: [embed], components: [row] });
         }
 
         if (sub === 'list') {
