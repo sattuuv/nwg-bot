@@ -21,6 +21,19 @@ module.exports = {
             } else {
                 console.log(chalk.yellow(`[AUTO-NAME] Cannot rename ${member.user.tag} (Role hierarchy or Owner).`));
             }
+
+            // AUTO-ROLE LOGIC
+            const Guild = require('../models/Guild');
+            const guildData = await Guild.findOne({ guildId: member.guild.id });
+
+            if (guildData && guildData.autoRoleId) {
+                const role = member.guild.roles.cache.get(guildData.autoRoleId);
+                if (role && member.manageable) {
+                    await member.roles.add(role);
+                    console.log(chalk.green(`[AUTO-ROLE] Assigned ${role.name} to ${member.user.tag}`));
+                }
+            }
+
         } catch (error) {
             console.error(chalk.red('[AUTO-NAME] Error renaming member:'), error);
         }
