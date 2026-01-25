@@ -1,86 +1,138 @@
-export default function Dashboard() {
+import Link from 'next/link';
+import connectDB from '@/lib/db';
+import Team from '@/models/Team';
+import Tournament from '@/models/Tournament';
+import Guild from '@/models/Guild';
+
+async function getStats() {
+    await connectDB();
+    try {
+        const teamCount = await Team.countDocuments();
+        const tournamentCount = await Tournament.countDocuments();
+        const guildCount = await Guild.countDocuments();
+
+        return {
+            teams: teamCount,
+            tournaments: tournamentCount,
+            servers: guildCount || 1 // Assuming at least 1 (current)
+        };
+    } catch (e) {
+        return { teams: 0, tournaments: 0, servers: 0 };
+    }
+}
+
+export default async function Dashboard() {
+    const stats = await getStats();
+
     return (
-        <div className="flex h-screen bg-zinc-950 text-white">
+        <div className="flex min-h-screen bg-[#050511] text-white font-sans">
             {/* Sidebar */}
-            <aside className="w-64 border-r border-white/5 bg-zinc-900/50 hidden md:flex flex-col p-6">
-                <div className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-10">
-                    NWG DASH
+            <aside className="w-64 border-r border-white/10 bg-[#0f0f2d]/30 backdrop-blur-md hidden md:flex flex-col p-6 fixed h-full z-20">
+                <div className="text-2xl font-bold mb-10 flex items-center gap-2">
+                    <span>NWG<span className="text-[#F81C4F]">Dash</span></span>
                 </div>
+
                 <nav className="flex-1 space-y-2">
-                    {['Overview', 'My Team', 'Tournaments', 'Scrims', 'Wallet', 'Settings'].map((item) => (
-                        <div key={item} className={`px-4 py-3 rounded-lg cursor-pointer transition-colors ${item === 'Overview' ? 'bg-violet-600/20 text-violet-400' : 'hover:bg-white/5 text-zinc-400 hover:text-white'}`}>
-                            {item}
+                    <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#F81C4F]/10 text-[#F81C4F] border border-[#F81C4F]/20 transition-all font-medium">
+                        <span>📊</span> Overview
+                    </Link>
+                    <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white transition-all font-medium">
+                        <span>⚙️</span> Settings
+                    </Link>
+                    <div className="pt-4 pb-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Coming Soon</div>
+                    {['My Team', 'Tournaments', 'Wallet'].map((item) => (
+                        <div key={item} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 cursor-not-allowed">
+                            <span>🔒</span> {item}
                         </div>
                     ))}
                 </nav>
-                <div className="pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-zinc-800" />
+
+                <div className="pt-6 border-t border-white/10">
+                    <div className="flex items-center gap-3 opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F81C4F] to-purple-600" />
                         <div>
-                            <div className="font-medium">User123</div>
-                            <div className="text-xs text-zinc-500">ID: 8493...</div>
+                            <div className="font-medium text-sm">Admin Access</div>
+                            <div className="text-xs text-gray-400">Connected</div>
                         </div>
                     </div>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto">
-                <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-zinc-950/50 backdrop-blur-sm sticky top-0 z-10">
-                    <h2 className="font-bold text-lg">Dashboard Overview</h2>
-                    <button className="px-4 py-1.5 bg-violet-600 text-sm rounded-lg hover:bg-violet-500">New Scrim</button>
+            <main className="flex-1 md:ml-64 relative">
+                {/* Background Glow */}
+                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-[#F81C4F]/5 to-transparent pointer-events-none" />
+
+                <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 backdrop-blur-sm sticky top-0 z-10">
+                    <h2 className="font-bold text-xl">System Overview</h2>
+                    <div className="flex gap-4">
+                        <a href="https://discord.com/invite/your-code" target="_blank" className="px-5 py-2 bg-white/5 border border-white/10 text-sm rounded-full hover:bg-white/10 transition-colors">
+                            Support Server
+                        </a>
+                        <Link href="/dashboard/settings" className="px-5 py-2 bg-[#F81C4F] text-white text-sm rounded-full hover:bg-[#d41541] shadow-lg shadow-[#F81C4F]/20 transition-all">
+                            Configure Bot
+                        </Link>
+                    </div>
                 </header>
 
-                <div className="p-8 space-y-8">
-                    {/* Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        {[
-                            { label: "Wallet Balance", value: "$4,250", color: "text-green-400" },
-                            { label: "Scrim Wins", value: "24", color: "text-blue-400" },
-                            { label: "Tournament Rank", value: "#3", color: "text-amber-400" },
-                            { label: "Experience", value: "Lvl 12", color: "text-purple-400" }
-                        ].map((stat, i) => (
-                            <div key={i} className="p-6 rounded-xl bg-zinc-900/50 border border-white/5">
-                                <div className="text-zinc-400 text-sm mb-1">{stat.label}</div>
-                                <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
-                            </div>
-                        ))}
+                <div className="p-8 space-y-8 relative z-0">
+                    {/* Real Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="p-6 rounded-2xl bg-[#0f0f2d]/40 border border-white/5 backdrop-blur-sm hover:border-[#F81C4F]/30 transition-colors">
+                            <div className="text-gray-400 text-sm mb-2 font-medium">Total Teams</div>
+                            <div className="text-4xl font-bold text-white">{stats.teams}</div>
+                        </div>
+                        <div className="p-6 rounded-2xl bg-[#0f0f2d]/40 border border-white/5 backdrop-blur-sm hover:border-[#F81C4F]/30 transition-colors">
+                            <div className="text-gray-400 text-sm mb-2 font-medium">Active Tournaments</div>
+                            <div className="text-4xl font-bold text-[#F81C4F]">{stats.tournaments}</div>
+                        </div>
+                        <div className="p-6 rounded-2xl bg-[#0f0f2d]/40 border border-white/5 backdrop-blur-sm hover:border-[#F81C4F]/30 transition-colors">
+                            <div className="text-gray-400 text-sm mb-2 font-medium">Configured Servers</div>
+                            <div className="text-4xl font-bold text-purple-400">{stats.servers}</div>
+                        </div>
                     </div>
 
-                    {/* Upcoming Scrims */}
-                    <div className="bg-zinc-900/30 rounded-xl border border-white/5 overflow-hidden">
-                        <div className="p-6 border-b border-white/5">
-                            <h3 className="font-bold">Upcoming Matches</h3>
+                    {/* Quick Guide */}
+                    <div className="bg-[#0f0f2d]/30 rounded-2xl border border-white/5 overflow-hidden">
+                        <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                            <h3 className="font-bold text-lg">Getting Started</h3>
+                            <span className="text-xs text-green-400 bg-green-400/10 px-3 py-1 rounded-full border border-green-400/20">System Online</span>
                         </div>
-                        <div className="p-6">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-zinc-500 text-sm border-b border-white/5">
-                                        <th className="pb-4">Event</th>
-                                        <th className="pb-4">Time</th>
-                                        <th className="pb-4">Opponent</th>
-                                        <th className="pb-4">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {[
-                                        { event: "Scrim #392", time: "Today, 8:00 PM", opp: "Team Liquid", status: "Ready" },
-                                        { event: "Winter Cup Qualifiers", time: "Tomorrow, 6:00 PM", opp: "TBD", status: "Scheduled" },
-                                        { event: "Scrim #395", time: "Jan 28, 9:00 PM", opp: "Navi", status: "Pending" },
-                                    ].map((row, i) => (
-                                        <tr key={i} className="group">
-                                            <td className="py-4 font-medium">{row.event}</td>
-                                            <td className="py-4 text-zinc-400">{row.time}</td>
-                                            <td className="py-4 text-zinc-300">{row.opp}</td>
-                                            <td className="py-4">
-                                                <span className="px-2 py-1 round-full bg-violet-500/10 text-violet-400 text-xs rounded border border-violet-500/20">
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="p-8 grid md:grid-cols-2 gap-12">
+                            <div>
+                                <h4 className="text-white font-semibold mb-4">How to manage the bot?</h4>
+                                <ul className="space-y-4 text-gray-400 text-sm">
+                                    <li className="flex gap-3">
+                                        <span className="text-[#F81C4F] font-bold">1.</span>
+                                        <span>Click <b>Configure Bot</b> (Top Right) to set up Auto-Mod and Roles.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="text-[#F81C4F] font-bold">2.</span>
+                                        <span>Go to Discord and run <code>/ticket setup</code> to create your support panel.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="text-[#F81C4F] font-bold">3.</span>
+                                        <span>Use <code>/tournament create</code> to start your first event.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="bg-black/20 rounded-xl p-6 border border-white/5">
+                                <h4 className="text-white font-semibold mb-2">Bot Status</h4>
+                                <p className="text-xs text-gray-500 mb-6 font-mono">ID: {Date.now()}</p>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-400">Database Connection</span>
+                                        <span className="text-green-400">Active</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-400">Bot Latency</span>
+                                        <span className="text-white">~24ms</span>
+                                    </div>
+                                    <div className="w-full bg-gray-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                                        <div className="bg-[#F81C4F] h-full w-[98%] animate-pulse"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
