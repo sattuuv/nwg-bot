@@ -18,8 +18,28 @@ module.exports = async (client, interaction) => {
         const memberIds = memberString.match(/\d{17,20}/g) || [];
         if (!memberIds.includes(interaction.user.id)) memberIds.unshift(interaction.user.id);
 
-        const tournament = await Tournament.findById(tournamentId);
+        const tournament = await Tournament.findById(tournamentId).populate('participants');
         if (!tournament) return interaction.reply({ content: '❌ Tournament not found.', ephemeral: true });
+
+        // Check if User is already in this tournament
+        const alreadyJoined = tournament.participants.some(t =>
+            t.captainId === interaction.user.id || t.members.includes(interaction.user.id)
+        );
+
+        if (alreadyJoined) {
+            return interaction.reply({ content: '❌ You have already joined this tournament!', ephemeral: true });
+        }
+
+        // Also check new members (optional but good)
+        // For strictness, we check if ANY of the new members are already in too.
+        for (const newMemberId of memberIds) {
+            const memberExists = tournament.participants.some(t =>
+                t.captainId === newMemberId || t.members.includes(newMemberId)
+            );
+            if (memberExists) {
+                return interaction.reply({ content: `❌ User <@${newMemberId}> is already registered in another team!`, ephemeral: true });
+            }
+        }
 
         if (tournament.participants.length >= tournament.maxTeams) {
             return interaction.reply({ content: '❌ Tournament is full!', ephemeral: true });
