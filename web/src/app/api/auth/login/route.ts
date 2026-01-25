@@ -9,8 +9,9 @@ export async function POST(req: Request) {
     const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'admin123';
 
     if (password === ADMIN_PASS) {
-        (await cookies()).set('admin_session', 'true', { httpOnly: true, path: '/' });
-        return NextResponse.json({ success: true });
+        const response = NextResponse.json({ success: true });
+        response.cookies.set('admin_session', 'true', { httpOnly: true, path: '/' });
+        return response;
     }
 
     return NextResponse.json({ success: false }, { status: 401 });
