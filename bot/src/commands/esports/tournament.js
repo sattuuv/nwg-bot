@@ -37,6 +37,7 @@ module.exports = {
             const newTourney = new Tournament({
                 name,
                 game,
+                guildId: interaction.guild.id,
                 createdBy: interaction.user.id,
                 channelId: interaction.channelId
             });
