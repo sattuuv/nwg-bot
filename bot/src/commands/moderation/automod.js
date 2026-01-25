@@ -15,8 +15,10 @@ module.exports = {
     ],
 
     async run(client, interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            return interaction.reply({ content: 'Admin Only.', ephemeral: true });
+        const checkAdmin = require('../../utils/checkAdmin');
+
+        if (!checkAdmin(interaction)) {
+            return interaction.reply({ content: '❌ You need Admin permissions or the Admin Role to do this.', ephemeral: true });
         }
 
         const sub = interaction.options.getSubcommand();

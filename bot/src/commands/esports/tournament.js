@@ -24,9 +24,11 @@ module.exports = {
     async run(client, interaction) {
         const sub = interaction.options.getSubcommand();
 
+        const checkAdmin = require('../../utils/checkAdmin');
+
         if (sub === 'create') {
-            if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-                return interaction.reply({ content: 'Admin only!', ephemeral: true });
+            if (!checkAdmin(interaction)) {
+                return interaction.reply({ content: '❌ You need Admin permissions or the Admin Role to do this.', ephemeral: true });
             }
 
             const name = interaction.options.getString('name');
