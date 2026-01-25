@@ -1,26 +1,58 @@
+'use client';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function Home() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#050511] relative overflow-hidden font-sans selection:bg-[#F81C4F] selection:text-white">
 
       {/* Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 p-4">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex justify-between items-center bg-[#0f0f2d]/40 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/10 shadow-sm transition-all duration-300">
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-white">NWG<span className="text-[#F81C4F]">Bot</span></span>
+          <nav className="relative bg-[#0f0f2d]/80 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/10 shadow-sm transition-all duration-300">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <span className="text-xl font-bold text-white">NWG<span className="text-[#F81C4F]">Bot</span></span>
+              </div>
+
+              {/* Desktop Menu */}
+              <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+                <Link href="/features" className="hover:text-[#F81C4F] transition-colors">Features</Link>
+                <Link href="/commands" className="hover:text-[#F81C4F] transition-colors">Commands</Link>
+                <Link href="/support" className="hover:text-[#F81C4F] transition-colors">Support</Link>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link href="/dashboard" className="hidden md:inline-flex items-center bg-white text-[#0f0f2d] font-semibold py-2 px-5 rounded-lg shadow-lg hover:-translate-y-0.5 transition-all text-sm">
+                  Dashboard
+                </Link>
+                {/* Mobile Menu Button */}
+                <button
+                  className="md:hidden text-white p-2 rounded-lg hover:bg-white/10"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  <span className="text-2xl">☰</span>
+                </button>
+              </div>
             </div>
-            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-              <Link href="/features" className="hover:text-[#F81C4F] transition-colors">Features</Link>
-              <Link href="/commands" className="hover:text-[#F81C4F] transition-colors">Commands</Link>
-              <Link href="/support" className="hover:text-[#F81C4F] transition-colors">Support</Link>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="hidden md:inline-flex items-center bg-white text-[#0f0f2d] font-semibold py-2 px-5 rounded-lg shadow-lg hover:-translate-y-0.5 transition-all text-sm">
-                Dashboard
-              </Link>
-            </div>
+
+            {/* Mobile Dropdown */}
+            {isMobileMenuOpen && (
+              <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-[#0f0f2d]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl z-50 animate-in slide-in-from-top-2 fade-in duration-200">
+                <div className="flex flex-col space-y-4 text-center">
+                  <Link href="/features" className="text-gray-300 hover:text-[#F81C4F] py-2 font-medium">Features</Link>
+                  <Link href="/commands" className="text-gray-300 hover:text-[#F81C4F] py-2 font-medium">Commands</Link>
+                  <Link href="/support" className="text-gray-300 hover:text-[#F81C4F] py-2 font-medium">Support</Link>
+                  <div className="pt-4 border-t border-white/10">
+                    <Link href="/dashboard" className="block w-full bg-[#F81C4F] text-white font-bold py-3 rounded-xl shadow-lg">
+                      Dashboard
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </nav>
         </div>
       </header>
