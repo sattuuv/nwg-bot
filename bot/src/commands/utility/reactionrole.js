@@ -1,8 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const ReactionMessage = require('../../models/ReactionMessage');
 
 module.exports = {
     name: 'reactionrole',
-    description: 'Setup Reaction Roles',
+    description: 'Setup Reaction Roles (Native)',
     options: [
         {
             name: 'create',
@@ -13,24 +14,19 @@ module.exports = {
                 { name: 'description', description: 'Embed Description', type: 3, required: true },
                 // Role 1
                 { name: 'role1', description: 'Role 1', type: 8, required: true },
-                { name: 'emoji1', description: 'Emoji 1', type: 3, required: true },
-                { name: 'label1', description: 'Button Label 1', type: 3, required: false },
+                { name: 'emoji1', description: 'Emoji 1 (Type the emoji itself)', type: 3, required: true },
                 // Role 2
                 { name: 'role2', description: 'Role 2', type: 8, required: false },
                 { name: 'emoji2', description: 'Emoji 2', type: 3, required: false },
-                { name: 'label2', description: 'Button Label 2', type: 3, required: false },
                 // Role 3
                 { name: 'role3', description: 'Role 3', type: 8, required: false },
                 { name: 'emoji3', description: 'Emoji 3', type: 3, required: false },
-                { name: 'label3', description: 'Button Label 3', type: 3, required: false },
                 // Role 4
                 { name: 'role4', description: 'Role 4', type: 8, required: false },
                 { name: 'emoji4', description: 'Emoji 4', type: 3, required: false },
-                { name: 'label4', description: 'Button Label 4', type: 3, required: false },
                 // Role 5
                 { name: 'role5', description: 'Role 5', type: 8, required: false },
                 { name: 'emoji5', description: 'Emoji 5', type: 3, required: false },
-                { name: 'label5', description: 'Button Label 5', type: 3, required: false },
             ]
         }
     ],
@@ -43,22 +39,24 @@ module.exports = {
         const title = interaction.options.getString('title');
         const descInput = interaction.options.getString('description');
 
-        const roles = [];
+        const rolesToSave = [];
         for (let i = 1; i <= 5; i++) {
             const role = interaction.options.getRole(`role${i}`);
-            if (role) {
-                roles.push({
+            // Note: Emoji inputs might be actual unicode (🔴) or Discord custom ID string
+            const emojiInput = interaction.options.getString(`emoji${i}`);
+
+            if (role && emojiInput) {
+                rolesToSave.push({
                     role: role,
-                    emoji: interaction.options.getString(`emoji${i}`),
-                    label: interaction.options.getString(`label${i}`) || role.name
+                    emoji: emojiInput
                 });
             }
         }
 
-        // Generate the "Professional" Description List
+        // Generate Description
         let finalDescription = descInput ? `${descInput}\n\n` : '';
-        roles.forEach((r, index) => {
-            finalDescription += `${index + 1}. Click on ${r.emoji} for ${r.role}\n`;
+        rolesToSave.forEach((r, index) => {
+            finalDescription += `${index + 1}. React with ${r.emoji} for ${r.role}\n`;
         });
 
         const embed = new EmbedBuilder()
@@ -66,25 +64,35 @@ module.exports = {
             .setDescription(finalDescription)
             .setColor('Blurple');
 
-        const rows = [];
-        let currentRow = new ActionRowBuilder();
+        // Send Message (No Inputs yet)
+        const sentMessage = await interaction.channel.send({ embeds: [embed] });
 
-        roles.forEach((r, index) => {
-            const btn = new ButtonBuilder()
-                .setCustomId(`role_${r.role.id}`)
-                .setLabel(r.label)
-                .setStyle(ButtonStyle.Secondary)
-                .setEmoji(r.emoji);
+        // Save to Database
+        try {
+            await ReactionMessage.create({
+                guildId: interaction.guild.id,
+                channelId: interaction.channel.id,
+                messageId: sentMessage.id,
+                roles: rolesToSave.map(r => ({
+                    emoji: r.emoji,   // We store the input string directly
+                    roleId: r.role.id
+                }))
+            });
 
-            currentRow.addComponents(btn);
-
-            if (currentRow.components.length >= 5 || index === roles.length - 1) {
-                rows.push(currentRow);
-                currentRow = new ActionRowBuilder();
+            // React to the message
+            for (const r of rolesToSave) {
+                try {
+                    await sentMessage.react(r.emoji);
+                } catch (e) {
+                    console.error(`Failed to react with ${r.emoji}:`, e);
+                }
             }
-        });
 
-        await interaction.channel.send({ embeds: [embed], components: rows });
-        return interaction.reply({ content: '✅ Multi-Role Menu posted!', ephemeral: true });
+            return interaction.reply({ content: '✅ Native Reaction Role created!', ephemeral: true });
+
+        } catch (err) {
+            console.error(err);
+            return interaction.reply({ content: '❌ Failed to save to database.', ephemeral: true });
+        }
     }
 };
