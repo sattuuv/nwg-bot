@@ -5,13 +5,32 @@ module.exports = {
     description: 'Setup Reaction Roles',
     options: [
         {
-            name: 'setup',
-            description: 'Create a reaction role message',
+            name: 'create',
+            description: 'Create a multi-role reaction message',
             type: 1,
             options: [
-                { name: 'role', description: 'Role to give', type: 8, required: true }, // ROLE
-                { name: 'description', description: 'Message description', type: 3, required: true },
-                { name: 'emoji', description: 'Button Emoji', type: 3, required: false }
+                { name: 'title', description: 'Embed Title', type: 3, required: true },
+                { name: 'description', description: 'Embed Description', type: 3, required: true },
+                // Role 1
+                { name: 'role1', description: 'Role 1', type: 8, required: true },
+                { name: 'emoji1', description: 'Emoji 1', type: 3, required: true },
+                { name: 'label1', description: 'Button Label 1', type: 3, required: false },
+                // Role 2
+                { name: 'role2', description: 'Role 2', type: 8, required: false },
+                { name: 'emoji2', description: 'Emoji 2', type: 3, required: false },
+                { name: 'label2', description: 'Button Label 2', type: 3, required: false },
+                // Role 3
+                { name: 'role3', description: 'Role 3', type: 8, required: false },
+                { name: 'emoji3', description: 'Emoji 3', type: 3, required: false },
+                { name: 'label3', description: 'Button Label 3', type: 3, required: false },
+                // Role 4
+                { name: 'role4', description: 'Role 4', type: 8, required: false },
+                { name: 'emoji4', description: 'Emoji 4', type: 3, required: false },
+                { name: 'label4', description: 'Button Label 4', type: 3, required: false },
+                // Role 5
+                { name: 'role5', description: 'Role 5', type: 8, required: false },
+                { name: 'emoji5', description: 'Emoji 5', type: 3, required: false },
+                { name: 'label5', description: 'Button Label 5', type: 3, required: false },
             ]
         }
     ],
@@ -21,24 +40,48 @@ module.exports = {
             return interaction.reply({ content: 'Manage Roles permission required.', ephemeral: true });
         }
 
-        const role = interaction.options.getRole('role');
+        const title = interaction.options.getString('title');
         const desc = interaction.options.getString('description');
-        const emoji = interaction.options.getString('emoji') || '✨';
+
+        const roles = [];
+        for (let i = 1; i <= 5; i++) {
+            const role = interaction.options.getRole(`role${i}`);
+            if (role) {
+                roles.push({
+                    role: role,
+                    emoji: interaction.options.getString(`emoji${i}`),
+                    label: interaction.options.getString(`label${i}`) || role.name
+                });
+            }
+        }
 
         const embed = new EmbedBuilder()
-            .setTitle(`Get the ${role.name} Role!`)
+            .setTitle(title)
             .setDescription(desc)
-            .setColor(role.color || 'Random');
+            .setColor('Blurple'); // Neutral color
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(`role_${role.id}`)
-                .setLabel(`Get ${role.name}`)
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji(emoji)
-        );
+        const rows = [];
+        let currentRow = new ActionRowBuilder();
 
-        await interaction.channel.send({ embeds: [embed], components: [row] });
-        return interaction.reply({ content: 'Reaction Role posted!', ephemeral: true });
+        roles.forEach((r, index) => {
+            // Append info to description
+            embed.addFields({ name: `${r.emoji} ${r.label}`, value: `<@&${r.role.id}>`, inline: true });
+
+            const btn = new ButtonBuilder()
+                .setCustomId(`role_${r.role.id}`)
+                .setLabel(r.label)
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji(r.emoji);
+
+            currentRow.addComponents(btn);
+
+            if (currentRow.components.length >= 5 || index === roles.length - 1) {
+                rows.push(currentRow);
+                currentRow = new ActionRowBuilder();
+            }
+        });
+
+        await interaction.channel.send({ embeds: [embed], components: rows });
+        return interaction.reply({ content: '✅ Multi-Role Menu posted!', ephemeral: true });
     }
 };
