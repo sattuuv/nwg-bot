@@ -29,6 +29,14 @@ class BotClient extends Client {
     async connect() {
         await this.registerModules();
         await this.login(this.config.DISCORD_TOKEN);
+
+        // Start Poller
+        try {
+            require('./utils/streamPoller')(this);
+            console.log(chalk.green('[SYSTEM] Stream Poller Started'));
+        } catch (e) {
+            console.error('[SYSTEM] Failed to start poller:', e);
+        }
     }
 
     async registerModules() {
