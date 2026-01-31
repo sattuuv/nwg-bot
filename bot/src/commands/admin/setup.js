@@ -22,6 +22,15 @@ module.exports = {
             options: [
                 { name: 'role', description: 'Role to give', type: 8, required: true }
             ]
+        },
+        {
+            name: 'streamer',
+            description: 'Configure Streamer Notifications',
+            type: 1,
+            options: [
+                { name: 'role', description: 'Role required to trigger notification', type: 8, required: true },
+                { name: 'channel', description: 'Channel to post notifications', type: 7, required: true }
+            ]
         }
     ],
 
@@ -74,6 +83,19 @@ module.exports = {
             await guildData.save();
 
             return interaction.reply({ content: `✅ **Auto-Role** updated. New members will get: ${role}`, ephemeral: true });
+        }
+
+        if (sub === 'streamer') {
+            const role = interaction.options.getRole('role');
+            const channel = interaction.options.getChannel('channel');
+
+            if (!channel.isTextBased()) return interaction.reply({ content: '❌ Invalid channel.', ephemeral: true });
+
+            guildData.streamerRoleId = role.id;
+            guildData.streamerChannelId = channel.id;
+            await guildData.save();
+
+            return interaction.reply({ content: `✅ **Streamer Configured!**\nUsers with ${role} will be announced in ${channel} when they go live.`, ephemeral: true });
         }
     }
 };

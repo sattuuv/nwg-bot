@@ -31,10 +31,17 @@ module.exports = {
             const guild = newPresence.guild;
             if (!guild) return;
 
-            // Simple Logic: Look for channel named 'streams' or 'live'
-            const channel = guild.channels.cache.find(c => c.name.includes('stream') && c.isTextBased())
-                || guild.channels.cache.find(c => c.name.includes('live') && c.isTextBased())
-                || guild.publicUpdatesChannel;
+            // Fetch Guild Settings from DB
+            const GuildModel = require('../models/Guild');
+            const guildData = await GuildModel.findOne({ guildId: guild.id });
+            if (!guildData || !guildData.streamerChannelId) return; // Not configured
+
+            // Check if user has the "Streamer Role" (if configured)
+            if (guildData.streamerRoleId && !newPresence.member.roles.cache.has(guildData.streamerRoleId)) {
+                return; // User is not a verified streamer
+            }
+
+            const channel = guild.channels.cache.get(guildData.streamerChannelId);
 
             if (channel) {
                 const embed = new EmbedBuilder()
