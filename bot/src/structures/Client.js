@@ -32,7 +32,7 @@ class BotClient extends Client {
 
         // Start Poller
         try {
-            require('./utils/streamPoller')(this);
+            require('../utils/streamPoller')(this);
             console.log(chalk.green('[SYSTEM] Stream Poller Started'));
         } catch (e) {
             console.error('[SYSTEM] Failed to start poller:', e);
