@@ -6,6 +6,30 @@ const Team = require('../models/Team'); // We might use this model or just raw d
 module.exports = async (client, interaction) => {
     const customId = interaction.customId;
 
+    // --- REACTION ROLE (Toggle) ---
+    if (customId.startsWith('role_')) {
+        const roleId = customId.split('_')[1];
+        const role = interaction.guild.roles.cache.get(roleId);
+
+        if (!role) {
+            return interaction.reply({ content: '❌ Role not found (it might have been deleted).', ephemeral: true });
+        }
+
+        const hasRole = interaction.member.roles.cache.has(roleId);
+
+        try {
+            if (hasRole) {
+                await interaction.member.roles.remove(role);
+                return interaction.reply({ content: `➖ Removed ${role}`, ephemeral: true });
+            } else {
+                await interaction.member.roles.add(role);
+                return interaction.reply({ content: `➕ Added ${role}`, ephemeral: true });
+            }
+        } catch (err) {
+            return interaction.reply({ content: '❌ I cannot manage this role (it might be higher than my role).', ephemeral: true });
+        }
+    }
+
     // --- TOURNAMENT JOIN (Display Modal) ---
     if (customId.startsWith('join_tournament_')) {
         const tournamentId = customId.split('_')[2];

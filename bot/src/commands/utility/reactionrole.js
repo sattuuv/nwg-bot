@@ -41,7 +41,7 @@ module.exports = {
         }
 
         const title = interaction.options.getString('title');
-        const desc = interaction.options.getString('description');
+        const descInput = interaction.options.getString('description');
 
         const roles = [];
         for (let i = 1; i <= 5; i++) {
@@ -55,18 +55,21 @@ module.exports = {
             }
         }
 
+        // Generate the "Professional" Description List
+        let finalDescription = descInput ? `${descInput}\n\n` : '';
+        roles.forEach((r, index) => {
+            finalDescription += `${index + 1}. Click on ${r.emoji} for ${r.role}\n`;
+        });
+
         const embed = new EmbedBuilder()
             .setTitle(title)
-            .setDescription(desc)
-            .setColor('Blurple'); // Neutral color
+            .setDescription(finalDescription)
+            .setColor('Blurple');
 
         const rows = [];
         let currentRow = new ActionRowBuilder();
 
         roles.forEach((r, index) => {
-            // Append info to description
-            embed.addFields({ name: `${r.emoji} ${r.label}`, value: `<@&${r.role.id}>`, inline: true });
-
             const btn = new ButtonBuilder()
                 .setCustomId(`role_${r.role.id}`)
                 .setLabel(r.label)
