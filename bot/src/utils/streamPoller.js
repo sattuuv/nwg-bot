@@ -4,10 +4,8 @@ const Streamer = require('../models/Streamer');
 const { EmbedBuilder } = require('discord.js');
 const chalk = require('chalk');
 
-console.log("!!! CRITICAL DEBUG: STREAM POLLER FILE IS LOADING !!!");
-
-// Poll every 1 minute for testing (usually 5)
-const POLL_INTERVAL = 1 * 60 * 1000;
+// Poll every 5 minutes
+const POLL_INTERVAL = 5 * 60 * 1000;
 
 async function checkStreams(client) {
     console.log(chalk.gray('[POLLER] Starting check...'));
