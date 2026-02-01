@@ -20,7 +20,17 @@ module.exports = {
                 { name: 'link', description: 'YouTube Channel Link (Must contain /channel/ID)', type: 3, required: true },
                 { name: 'channel', description: 'Discord Channel for notifications', type: 7, required: true },
                 { name: 'role', description: 'Streamer Role to ping (e.g. @PewDiePie Fans)', type: 8, required: false },
-                { name: 'game_role', description: 'Game Role to ping (e.g. @Valorant)', type: 8, required: false }
+                { name: 'game_role', description: 'Game Role to ping (e.g. @Valorant)', type: 8, required: false },
+                {
+                    name: 'type',
+                    description: 'Notification Type (Default: All)',
+                    type: 3,
+                    required: false,
+                    choices: [
+                        { name: 'All Videos (Uploads + Live)', value: 'all' },
+                        { name: 'Live Streams Only', value: 'live' }
+                    ]
+                }
             ]
         },
         {
@@ -51,6 +61,7 @@ module.exports = {
             const targetChannel = interaction.options.getChannel('channel');
             const role = interaction.options.getRole('role');
             const gameRole = interaction.options.getRole('game_role');
+            const notifyType = interaction.options.getString('type') || 'all';
 
             const ytChannelId = extractChannelId(url);
             if (!ytChannelId) {
@@ -80,10 +91,11 @@ module.exports = {
                 notificationChannelId: targetChannel.id,
                 roleIdToPing: role ? role.id : null,
                 gameRoleId: gameRole ? gameRole.id : null,
+                notifyType: notifyType,
                 lastContentId: 'init' // Start fresh
             });
 
-            return interaction.editReply({ content: `✅ **Added!** Monitoring **${channelName}** (<${url}>).\nNotifications will go to ${targetChannel}.` });
+            return interaction.editReply({ content: `✅ **Added!** Monitoring **${channelName}** (<${url}>) for **${notifyType.toUpperCase()}** content.\nNotifications will go to ${targetChannel}.` });
         }
 
         if (sub === 'remove') {

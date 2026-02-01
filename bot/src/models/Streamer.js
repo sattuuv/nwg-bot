@@ -9,6 +9,7 @@ const schema = new mongoose.Schema({
     notificationChannelId: String,
     roleIdToPing: String, // Streamer-specific role
     gameRoleId: String,   // Game-specific role
+    notifyType: { type: String, enum: ['all', 'live'], default: 'all' }, // 'all' = Uploads + Live, 'live' = Live Only
     lastContentId: String,  // ID of the last video/stream announced to prevent duplicates
     lastCheckTime: { type: Number, default: 0 }
 });
