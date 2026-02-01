@@ -65,9 +65,9 @@ export default function FeaturesPage() {
                         <div className="text-4xl mb-6 bg-yellow-500/10 w-16 h-16 flex items-center justify-center rounded-xl group-hover:scale-110 transition-transform">📢</div>
                         <h3 className="text-2xl font-bold mb-3">Engagement</h3>
                         <ul className="text-gray-400 space-y-2 text-sm">
-                            <li>• Streamer Notifications</li>
+                            <li>• Streamer Monitor (YouTube/Twitch)</li>
                             <li>• Auto-Nicknames (NWG x Users)</li>
-                            <li>• Reaction Roles</li>
+                            <li>• Native Reaction Roles</li>
                             <li>• Welcome Messages</li>
                         </ul>
                     </div>

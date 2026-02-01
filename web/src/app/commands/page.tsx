@@ -37,6 +37,10 @@ export default function CommandsPage() {
                                 <code className="bg-blue-500/10 text-blue-400 px-4 py-1 rounded-full font-mono text-sm w-fit">/announce</code>
                                 <span className="text-gray-400">Send a colorful embed message to any channel.</span>
                             </div>
+                            <div className="flex flex-col md:flex-row gap-4 justify-between border-b border-white/5 pb-4 last:border-0">
+                                <code className="bg-blue-500/10 text-blue-400 px-4 py-1 rounded-full font-mono text-sm w-fit">/streamer add</code>
+                                <span className="text-gray-400">Monitor a YouTube channel for new uploads/streams.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
