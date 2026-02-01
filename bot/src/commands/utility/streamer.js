@@ -1,10 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
-const Streamer = require('../../models/Streamer');
-const axios = require('axios'); // We need axios to fetch channel ID if user gives link (optional, or we ask for ID)
+const Parser = require('rss-parser');
+const parser = new Parser();
 
 // Helper to extract Channel ID from link (Simple regex)
 function extractChannelId(url) {
-    // Supports: youtube.com/channel/ID
     const match = url.match(/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/);
     if (match) return match[1];
     return null;
@@ -47,31 +45,42 @@ module.exports = {
         const sub = interaction.options.getSubcommand();
 
         if (sub === 'add') {
+            await interaction.deferReply({ ephemeral: true }); // Defer because fetching RSS takes time
             const url = interaction.options.getString('link');
             const targetChannel = interaction.options.getChannel('channel');
             const role = interaction.options.getRole('role');
 
             const ytChannelId = extractChannelId(url);
             if (!ytChannelId) {
-                return interaction.reply({ content: '❌ Invalid Link. Please use the full link format: `https://www.youtube.com/channel/UC...` \n(If you have a custom handle like @User, please find your Channel ID in YouTube Settings -> Advanced).', ephemeral: true });
+                return interaction.editReply({ content: '❌ Invalid Link. Please use the full link format: `https://www.youtube.com/channel/UC...` \n(If you have a custom handle like @User, please find your Channel ID in YouTube Settings -> Advanced).' });
             }
 
             // Check if already exists
             const exists = await Streamer.findOne({ guildId: interaction.guild.id, channelId: ytChannelId });
             if (exists) {
-                return interaction.reply({ content: '❌ This channel is already being monitored.', ephemeral: true });
+                return interaction.editReply({ content: '❌ This channel is already being monitored.' });
+            }
+
+            // Fetch Channel Name for better UI
+            let channelName = 'Unknown Channel';
+            try {
+                const feed = await parser.parseURL(`https://www.youtube.com/feeds/videos.xml?channel_id=${ytChannelId}`);
+                if (feed && feed.title) channelName = feed.title;
+            } catch (e) {
+                console.log('Could not fetch channel name:', e.message);
             }
 
             await Streamer.create({
                 guildId: interaction.guild.id,
                 channelLink: url,
+                channelName: channelName,
                 channelId: ytChannelId,
                 notificationChannelId: targetChannel.id,
                 roleIdToPing: role ? role.id : null,
                 lastContentId: 'init' // Start fresh
             });
 
-            return interaction.reply({ content: `✅ **Added!** Monitoring [Channel](${url}). notifications will go to ${targetChannel}.`, ephemeral: true });
+            return interaction.editReply({ content: `✅ **Added!** Monitoring **${channelName}** (<${url}>).\nNotifications will go to ${targetChannel}.` });
         }
 
         if (sub === 'remove') {
@@ -93,8 +102,13 @@ module.exports = {
             const streamers = await Streamer.find({ guildId: interaction.guild.id });
             if (streamers.length === 0) return interaction.reply({ content: 'No streamers monitored.', ephemeral: true });
 
-            const list = streamers.map((s, i) => `${i + 1}. <${s.channelLink}> -> <#${s.notificationChannelId}>`).join('\n');
-            return interaction.reply({ content: `**Monitored Channels:**\n${list}`, ephemeral: true });
+            const list = streamers.map((s, i) => {
+                const name = s.channelName || 'YouTube Channel';
+                const role = s.roleIdToPing ? `(Ping: <@&${s.roleIdToPing}>)` : '';
+                return `${i + 1}. **${name}**\n   🔗 <${s.channelLink}>\n   📢 <#${s.notificationChannelId}> ${role}`;
+            }).join('\n\n');
+
+            return interaction.reply({ content: `**📺 Monitored Channels:**\n\n${list}`, ephemeral: true });
         }
     }
 };

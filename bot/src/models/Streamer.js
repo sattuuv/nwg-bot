@@ -4,6 +4,7 @@ const schema = new mongoose.Schema({
     guildId: String,
     platform: { type: String, default: 'youtube' },
     channelLink: String,
+    channelName: String, // Scraped Name
     channelId: String, // YouTube Channel ID
     notificationChannelId: String,
     roleIdToPing: String,
