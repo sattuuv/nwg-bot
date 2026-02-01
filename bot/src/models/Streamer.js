@@ -7,7 +7,8 @@ const schema = new mongoose.Schema({
     channelName: String, // Scraped Name
     channelId: String, // YouTube Channel ID
     notificationChannelId: String,
-    roleIdToPing: String,
+    roleIdToPing: String, // Streamer-specific role
+    gameRoleId: String,   // Game-specific role
     lastContentId: String,  // ID of the last video/stream announced to prevent duplicates
     lastCheckTime: { type: Number, default: 0 }
 });

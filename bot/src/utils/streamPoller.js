@@ -50,7 +50,9 @@ async function checkStreams(client) {
                     continue;
                 }
 
-                const rolePing = data.roleIdToPing ? `<@&${data.roleIdToPing}>` : '';
+                const rolePing1 = data.roleIdToPing ? `<@&${data.roleIdToPing}>` : '';
+                const rolePing2 = data.gameRoleId ? `<@&${data.gameRoleId}>` : '';
+                const pings = [rolePing1, rolePing2].filter(Boolean).join(' ');
 
                 const embed = new EmbedBuilder()
                     .setTitle(`🔴 New Video/Stream: ${latest.title}`)
@@ -60,7 +62,11 @@ async function checkStreams(client) {
                     .setColor('#FF0000')
                     .setTimestamp(new Date(latest.pubDate));
 
-                await channel.send({ content: `${rolePing} **${latest.author}** just posted!`, embeds: [embed] });
+                const msgContent = pings
+                    ? `Hey fellas! **${latest.author}** is live/uploaded! ${pings}`
+                    : `Hey fellas! **${latest.author}** is live/uploaded!`;
+
+                await channel.send({ content: msgContent, embeds: [embed] });
 
                 console.log(chalk.magenta(`[YOUTUBE] Notification sent for ${latest.author} in ${guild.name}`));
 
@@ -70,28 +76,8 @@ async function checkStreams(client) {
                 await data.save();
 
             } else if (data.lastContentId === 'init') {
-                // TEST MODE: Send notification even on first run (if live/latest exists)
-                console.log(chalk.green(`[POLLER] TEST MODE: Sending init notification for ${latest.title}`));
-
-                // Fetch Guild & Channel
-                const guild = client.guilds.cache.get(data.guildId);
-                if (guild) {
-                    const channel = guild.channels.cache.get(data.notificationChannelId);
-                    if (channel) {
-                        const rolePing = data.roleIdToPing ? `<@&${data.roleIdToPing}>` : '';
-                        const embed = new EmbedBuilder()
-                            .setTitle(`🔴 New Video/Stream: ${latest.title}`)
-                            .setURL(latest.link)
-                            .setAuthor({ name: latest.author })
-                            .setImage(`https://img.youtube.com/vi/${latest.id.replace('yt:video:', '')}/maxresdefault.jpg`)
-                            .setColor('#FF0000')
-                            .setTimestamp(new Date(latest.pubDate));
-
-                        await channel.send({ content: `${rolePing} **${latest.author}** just posted! (Test Notification)`, embeds: [embed] });
-                    }
-                }
-
-                console.log(chalk.blue(`[POLLER] Initialized ${data.channelId} and SENT NOTIFICATION`));
+                console.log(chalk.blue(`[POLLER] Initialized ${data.channelId} with last video: ${latest.title}`));
+                // First run, just save the current ID so we don't spam old videos
                 data.lastContentId = latest.id;
                 await data.save();
             } else {

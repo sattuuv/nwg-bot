@@ -19,7 +19,8 @@ module.exports = {
             options: [
                 { name: 'link', description: 'YouTube Channel Link (Must contain /channel/ID)', type: 3, required: true },
                 { name: 'channel', description: 'Discord Channel for notifications', type: 7, required: true },
-                { name: 'role', description: 'Role to ping (optional)', type: 8, required: false }
+                { name: 'role', description: 'Streamer Role to ping (e.g. @PewDiePie Fans)', type: 8, required: false },
+                { name: 'game_role', description: 'Game Role to ping (e.g. @Valorant)', type: 8, required: false }
             ]
         },
         {
@@ -49,6 +50,7 @@ module.exports = {
             const url = interaction.options.getString('link');
             const targetChannel = interaction.options.getChannel('channel');
             const role = interaction.options.getRole('role');
+            const gameRole = interaction.options.getRole('game_role');
 
             const ytChannelId = extractChannelId(url);
             if (!ytChannelId) {
@@ -77,6 +79,7 @@ module.exports = {
                 channelId: ytChannelId,
                 notificationChannelId: targetChannel.id,
                 roleIdToPing: role ? role.id : null,
+                gameRoleId: gameRole ? gameRole.id : null,
                 lastContentId: 'init' // Start fresh
             });
 
@@ -104,8 +107,11 @@ module.exports = {
 
             const list = streamers.map((s, i) => {
                 const name = s.channelName || 'YouTube Channel';
-                const role = s.roleIdToPing ? `(Ping: <@&${s.roleIdToPing}>)` : '';
-                return `${i + 1}. **${name}**\n   🔗 <${s.channelLink}>\n   📢 <#${s.notificationChannelId}> ${role}`;
+                const role1 = s.roleIdToPing ? `<@&${s.roleIdToPing}>` : '';
+                const role2 = s.gameRoleId ? `<@&${s.gameRoleId}>` : '';
+                const pings = [role1, role2].filter(Boolean).join(' ');
+
+                return `${i + 1}. **${name}**\n   🔗 <${s.channelLink}>\n   📢 <#${s.notificationChannelId}> ${pings ? `(Pings: ${pings})` : ''}`;
             }).join('\n\n');
 
             return interaction.reply({ content: `**📺 Monitored Channels:**\n\n${list}`, ephemeral: true });
