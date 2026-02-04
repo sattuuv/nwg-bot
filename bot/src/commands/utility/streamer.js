@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } = require('discord.js');
 const Parser = require('rss-parser');
 const parser = new Parser();
 const Streamer = require('../../models/Streamer');
@@ -152,7 +152,13 @@ module.exports = {
                         }).slice(0, 25)
                     );
 
-                const msg = await interaction.reply({ embeds: [embed], components: [row], ephemeral: true, fetchReply: true });
+                const msgResponse = await interaction.reply({
+                    embeds: [embed],
+                    components: [row],
+                    flags: MessageFlags.Ephemeral,
+                    withResponse: true
+                });
+                const msg = msgResponse.resource ? msgResponse.resource : msgResponse; // Handle different return types safely
 
                 // 2. Collector for Interaction
                 const collector = msg.createMessageComponentCollector({ time: 60000 });
@@ -160,7 +166,7 @@ module.exports = {
                 collector.on('collect', async i => {
                     // Safety check: only the command runner can use it
                     if (i.user.id !== interaction.user.id) {
-                        return i.reply({ content: '❌ You cannot control this menu.', ephemeral: true });
+                        return i.reply({ content: '❌ You cannot control this menu.', flags: MessageFlags.Ephemeral });
                     }
 
                     if (i.customId === 'select_streamer') {
