@@ -184,9 +184,14 @@ module.exports = {
                         });
                     }
                     else if (i.customId.startsWith('delete_')) {
-                        const idToDelete = i.customId.split('_')[1];
-                        await Streamer.deleteOne({ guildId: interaction.guild.id, channelId: idToDelete });
-                        await i.update({ content: `✅ **Removed** streamer. Run /streamer list again to refresh.`, components: [] });
+                        const idToDelete = i.customId.replace('delete_', '');
+                        const result = await Streamer.deleteOne({ guildId: interaction.guild.id, channelId: idToDelete });
+
+                        if (result.deletedCount > 0) {
+                            await i.update({ content: `✅ **Removed** streamer. Run /streamer list again to refresh.`, components: [] });
+                        } else {
+                            await i.update({ content: `❌ Could not delete (ID: ${idToDelete}). Maybe already removed?`, components: [] });
+                        }
                     }
                     else if (i.customId === 'cancel') {
                         await i.update({ content: 'Cancelled.', components: [] });
