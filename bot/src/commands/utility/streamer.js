@@ -117,16 +117,69 @@ module.exports = {
             const streamers = await Streamer.find({ guildId: interaction.guild.id });
             if (streamers.length === 0) return interaction.reply({ content: 'No streamers monitored.', ephemeral: true });
 
-            const list = streamers.map((s, i) => {
-                const name = s.channelName || 'YouTube Channel';
-                const role1 = s.roleIdToPing ? `<@&${s.roleIdToPing}>` : '';
-                const role2 = s.gameRoleId ? `<@&${s.gameRoleId}>` : '';
-                const pings = [role1, role2].filter(Boolean).join(' ');
+            const { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
-                return `${i + 1}. **${name}**\n   🔗 <${s.channelLink}>\n   📢 <#${s.notificationChannelId}> ${pings ? `(Pings: ${pings})` : ''}`;
-            }).join('\n\n');
+            // 1. Create Dropdown Options
+            const options = streamers.map((s) => ({
+                label: s.channelName || s.channelId,
+                description: `Channel: ${client.channels.cache.get(s.notificationChannelId)?.name || 'Unknown'} | Type: ${s.notifyType}`,
+                value: s.channelId
+            })).slice(0, 25); // Discord limit 25
 
-            return interaction.reply({ content: `**📺 Monitored Channels:**\n\n${list}`, ephemeral: true });
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('select_streamer')
+                .setPlaceholder('Select a streamer to manage...')
+                .addOptions(options);
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+
+            const embed = new EmbedBuilder()
+                .setTitle('📺 Streamer Dashboard')
+                .setDescription('Select a streamer from the dropdown below to **Edit** or **Remove** them.')
+                .setColor('#2b2d31')
+                .addFields(
+                    streamers.map(s => {
+                        const role1 = s.roleIdToPing ? `<@&${s.roleIdToPing}>` : '';
+                        const role2 = s.gameRoleId ? `<@&${s.gameRoleId}>` : '';
+                        return {
+                            name: s.channelName || 'Unknown',
+                            value: `🔗 <${s.channelLink}>\n📢 <#${s.notificationChannelId}>\n${role1} ${role2}`,
+                            inline: true
+                        };
+                    }).slice(0, 25)
+                );
+
+            const msg = await interaction.reply({ embeds: [embed], components: [row], ephemeral: true, fetchReply: true });
+
+            // 2. Collector for Interaction
+            const collector = msg.createMessageComponentCollector({ time: 60000 });
+
+            collector.on('collect', async i => {
+                if (i.customId === 'select_streamer') {
+                    const selectedId = i.values[0];
+                    const streamerData = streamers.find(s => s.channelId === selectedId);
+
+                    const actionRow = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId(`delete_${selectedId}`).setLabel('Remove').setStyle(ButtonStyle.Danger),
+                        // For now, Edit can be complex via modal, let's start with Delete as requested primarily
+                        new ButtonBuilder().setCustomId(`cancel`).setLabel('Cancel').setStyle(ButtonStyle.Secondary)
+                    );
+
+                    await i.update({
+                        content: `**Manage: ${streamerData.channelName}**\nWhat would you like to do?`,
+                        components: [actionRow],
+                        embeds: []
+                    });
+                }
+                else if (i.customId.startsWith('delete_')) {
+                    const idToDelete = i.customId.split('_')[1];
+                    await Streamer.deleteOne({ guildId: interaction.guild.id, channelId: idToDelete });
+                    await i.update({ content: `✅ **Removed** streamer. Run /streamer list again to refresh.`, components: [] });
+                }
+                else if (i.customId === 'cancel') {
+                    await i.update({ content: 'Cancelled.', components: [] });
+                }
+            });
         }
     }
 };
