@@ -7,11 +7,24 @@ const chalk = require('chalk');
 // Poll every 5 minutes
 const POLL_INTERVAL = 5 * 60 * 1000;
 
+const axios = require('axios'); // Ensure axios is required
+
+// Helper to check if a video is actually live
+async function isLive(videoId) {
+    try {
+        const res = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
+        });
+        return res.data.includes('isLive":true');
+    } catch (e) {
+        console.error('Error checking live status:', e.message);
+        return false;
+    }
+}
+
 async function checkStreams(client) {
     console.log(chalk.gray('[POLLER] Starting check...'));
 
-    // Get all unique streamers to avoid fetching same RSS multiple times? 
-    // For simplicity, iterate DB. In scale, we'd group ID.
     const streamers = await Streamer.find({});
     console.log(chalk.gray(`[POLLER] Found ${streamers.length} streamers to check.`));
 
@@ -20,61 +33,59 @@ async function checkStreams(client) {
 
         try {
             const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${data.channelId}`;
-            // console.log(`[POLLER] Fetching ${feedUrl}`);
             const feed = await parser.parseURL(feedUrl);
 
-            // Get latest entry
             const latest = feed.items[0];
-            if (!latest) {
-                console.log(chalk.yellow(`[POLLER] No videos found for ${data.channelId}`));
-                continue;
-            }
-
-            console.log(chalk.gray(`[POLLER] ${data.channelId}: Latest video is "${latest.title}" (${latest.id})`));
+            if (!latest) continue;
 
             // Check if new
             if (latest.id !== data.lastContentId && data.lastContentId !== 'init') {
+                const videoId = latest.id.replace('yt:video:', '');
+
+                // LIVE ONLY CHECK
+                if (data.notifyType === 'live') {
+                    const liveStatus = await isLive(videoId);
+                    if (!liveStatus) {
+                        console.log(chalk.yellow(`[POLLER] Skipping upload for ${data.channelName} (Live Only mode)`));
+                        data.lastContentId = latest.id;
+                        await data.save();
+                        continue;
+                    }
+                }
+
                 console.log(chalk.green(`[POLLER] NEW CONTENT DETECTED: ${latest.title}`));
-                // NEW CONTENT!
 
                 // Fetch Guild & Channel
                 const guild = client.guilds.cache.get(data.guildId);
-                if (!guild) {
-                    console.log('[POLLER] Guild not found');
-                    continue;
-                }
+                if (!guild) continue;
 
                 const channel = guild.channels.cache.get(data.notificationChannelId);
-                if (!channel) {
-                    console.log('[POLLER] Notification channel not found');
-                    continue;
-                }
+                if (!channel) continue;
 
                 const rolePing1 = data.roleIdToPing ? `<@&${data.roleIdToPing}>` : '';
                 const rolePing2 = data.gameRoleId ? `<@&${data.gameRoleId}>` : '';
                 const pings = [rolePing1, rolePing2].filter(Boolean).join(' ');
 
                 const embed = new EmbedBuilder()
-                    .setTitle(`🔴 New Video/Stream: ${latest.title}`)
+                    .setTitle(`🔴 ${data.notifyType === 'live' ? 'Live Stream' : 'New Video'}: ${latest.title}`)
                     .setURL(latest.link)
                     .setAuthor({ name: latest.author })
-                    .setImage(`https://img.youtube.com/vi/${latest.id.replace('yt:video:', '')}/maxresdefault.jpg`) // Construct thumb
+                    .setImage(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
                     .setColor('#FF0000')
                     .setTimestamp(new Date(latest.pubDate));
 
                 const msgContent = pings
-                    ? `Hey fellas! **${latest.author}** is live/uploaded! ${pings}`
-                    : `Hey fellas! **${latest.author}** is live/uploaded!`;
+                    ? `Hey fellas! **${latest.author}** is live! ${pings}`
+                    : `Hey fellas! **${latest.author}** is live!`;
 
                 await channel.send({ content: msgContent, embeds: [embed] });
 
-                console.log(chalk.magenta(`[YOUTUBE] Notification sent for ${latest.author} in ${guild.name}`));
+                console.log(chalk.magenta(`[YOUTUBE] Notification sent for ${latest.author}`));
 
                 // Update DB
                 data.lastContentId = latest.id;
                 data.lastCheckTime = Date.now();
                 await data.save();
-
             } else if (data.lastContentId === 'init') {
                 console.log(chalk.blue(`[POLLER] Initialized ${data.channelId} with last video: ${latest.title}`));
                 // First run, just save the current ID so we don't spam old videos
