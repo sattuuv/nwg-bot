@@ -152,13 +152,12 @@ module.exports = {
                         }).slice(0, 25)
                     );
 
-                const msgResponse = await interaction.reply({
+                await interaction.reply({
                     embeds: [embed],
                     components: [row],
-                    flags: MessageFlags.Ephemeral,
-                    withResponse: true
+                    flags: MessageFlags.Ephemeral
                 });
-                const msg = msgResponse.resource ? msgResponse.resource : msgResponse; // Handle different return types safely
+                const msg = await interaction.fetchReply();
 
                 // 2. Collector for Interaction
                 const collector = msg.createMessageComponentCollector({ time: 60000 });
