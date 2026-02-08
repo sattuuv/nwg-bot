@@ -152,12 +152,13 @@ module.exports = {
                         }).slice(0, 25)
                     );
 
-                await interaction.reply({
+                // Defer first to ensure we can fetch it reliably
+                await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+                const msg = await interaction.editReply({
                     embeds: [embed],
-                    components: [row],
-                    flags: MessageFlags.Ephemeral
+                    components: [row]
                 });
-                const msg = await interaction.fetchReply();
 
                 // 2. Collector for Interaction
                 const collector = msg.createMessageComponentCollector({ time: 60000 });

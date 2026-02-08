@@ -98,7 +98,7 @@ async function checkStreams(client) {
 
         } catch (err) {
             console.error(`[POLLER] Error checking ${data.channelId}:`, err.message);
-            if (err.message.includes('404')) {
+            if (err.message.includes('404') || err.message.includes('Status code 404') || err.message.includes('Not Found')) {
                 console.log(chalk.red(`[POLLER] Channel ${data.channelId} not found (404). Removing from DB.`));
                 await Streamer.deleteOne({ _id: data._id });
             }
