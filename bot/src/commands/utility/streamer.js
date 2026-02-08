@@ -146,7 +146,7 @@ module.exports = {
                             const pings = [role1, role2].filter(Boolean).join(' ');
                             return {
                                 name: s.channelName || 'Unknown',
-                                value: `🔗 <${s.channelLink}>\n📢 <#${s.notificationChannelId}>\n${pings}`,
+                                value: `🔗 <${s.channelLink}>\n📢 <#${s.notificationChannelId}>\n**Type:** ${s.notifyType.toUpperCase()}\n${pings}`,
                                 inline: true
                             };
                         }).slice(0, 25)
