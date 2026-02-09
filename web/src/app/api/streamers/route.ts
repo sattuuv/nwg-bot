@@ -9,6 +9,7 @@ import Parser from 'rss-parser';
 export async function GET(request: Request) {
     await connectDB();
     const streamers = await Streamer.find({});
+    console.log(`[API] Streamers Found: ${streamers.length} | DB: ${mongoose.connection.name}`);
     return NextResponse.json(streamers);
 }
 
