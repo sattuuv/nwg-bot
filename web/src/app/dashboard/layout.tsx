@@ -12,6 +12,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         { href: '/', label: 'Home', icon: '🏠' },
         { href: '/dashboard', label: 'Overview', icon: '📊' },
         { href: '/dashboard/streamers', label: 'Streamers', icon: '🔴' },
+        { href: '/dashboard/plugins', label: 'Plugins', icon: '🧩' },
         { href: '/dashboard/settings', label: 'Bot Settings', icon: '⚙️' },
     ];
 
@@ -43,8 +44,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                                 href={link.href}
                                 onClick={() => setIsSidebarOpen(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${isActive
-                                        ? 'bg-[#F81C4F]/10 text-[#F81C4F] border border-[#F81C4F]/20'
-                                        : 'hover:bg-white/5 text-gray-400 hover:text-white'
+                                    ? 'bg-[#F81C4F]/10 text-[#F81C4F] border border-[#F81C4F]/20'
+                                    : 'hover:bg-white/5 text-gray-400 hover:text-white'
                                     }`}
                             >
                                 <span>{link.icon}</span> {link.label}
