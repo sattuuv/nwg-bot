@@ -40,7 +40,7 @@ export default function LoginPage() {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: "out" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="relative z-10 w-full max-w-md px-6"
             >
                 <div className="bg-[#0f0f2d]/60 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-2xl relative overflow-hidden group">
