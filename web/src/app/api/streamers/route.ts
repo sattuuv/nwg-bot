@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import Streamer from '@/models/Streamer';
 import Parser from 'rss-parser';
